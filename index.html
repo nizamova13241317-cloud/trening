@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>HTML Пісочниця</title>
+  <style>
+    :root {
+      --app-h: 100dvh;
+      --bg: #0f172a;
+      --surface: #162033;
+      --surface-2: #1e293b;
+      --surface-3: #283548;
+      --border: #2e3d52;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-bg: rgba(56, 189, 248, 0.14);
+      --accent-text: #0f172a;
+      --symbol: #fbbf24;
+      --symbol-bg: rgba(251, 191, 36, 0.12);
+      --danger: #f87171;
+      --danger-bg: rgba(248, 113, 113, 0.14);
+      --success: #34d399;
+      --editor-bg: #0b1220;
+      --editor-text: #f1f5f9;
+      --preview-bg: #ffffff;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --surface-3: #e2e8f0;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-bg: rgba(2, 132, 199, 0.12);
+      --accent-text: #ffffff;
+      --symbol: #b45309;
+      --symbol-bg: rgba(217, 119, 6, 0.11);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+      --success: #059669;
+      --editor-bg: #ffffff;
+      --editor-text: #0f172a;
+      --preview-bg: #ffffff;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: var(--app-h);
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: var(--app-h);
+      max-width: 100%;
+      overflow: hidden;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Top compact service bar */
+    .topbar {
+      flex: 0 0 auto;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px 8px;
+    }
+
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      padding: 0 4px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .brand-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--symbol);
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 2px;
+      gap: 2px;
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: 280px;
+    }
+
+    .seg-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 32px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .theme-btn {
+      flex: 0 0 auto;
+      height: 36px;
+      min-width: 36px;
+      padding: 0 9px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .service-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      padding-bottom: 1px;
+    }
+
+    .service-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .svc-btn {
+      flex: 0 0 auto;
+      height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .svc-btn:active {
+      transform: scale(0.97);
+      background: var(--surface-3);
+    }
+
+    .svc-btn.danger {
+      color: var(--danger);
+      border-color: transparent;
+      background: var(--danger-bg);
+    }
+
+    .svc-btn.primary {
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.32);
+      background: var(--accent-bg);
+    }
+
+    /* Main workspace */
+    .workspace {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .editor-pane {
+      flex: 1 1 50%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--editor-bg);
+      overflow: hidden;
+    }
+
+    .editor-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      display: flex;
+    }
+
+    #codeEditor {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 10px 12px;
+      border: none;
+      outline: none;
+      resize: none;
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      caret-color: var(--accent);
+      font-family: var(--mono);
+      font-size: 16px;
+      line-height: 1.48;
+      tab-size: 2;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    #codeEditor::placeholder {
+      color: var(--text-muted);
+      opacity: 0.65;
+    }
+
+    /* Quick insert toolbar */
+    .quick-bar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      user-select: none;
+    }
+
+    .quick-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .q-sep {
+      flex: 0 0 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 1px;
+    }
+
+    .q-btn {
+      flex: 0 0 auto;
+      min-width: 40px;
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      touch-action: pan-x;
+    }
+
+    .q-btn:active {
+      background: var(--surface-3);
+      transform: scale(0.95);
+    }
+
+    .q-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .q-btn.sym {
+      color: var(--symbol);
+      background: var(--symbol-bg);
+      border-color: rgba(251, 191, 36, 0.25);
+      min-width: 40px;
+      padding: 0 8px;
+      font-size: 16px;
+    }
+
+    .q-btn.tag {
+      color: var(--accent);
+      background: var(--accent-bg);
+      border-color: rgba(56, 189, 248, 0.26);
+      font-size: 13px;
+    }
+
+    .q-btn.nav {
+      font-family: var(--sans);
+      font-size: 15px;
+      min-width: 42px;
+    }
+
+    /* Preview pane */
+    .preview-pane {
+      flex: 1 1 50%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--preview-bg);
+      overflow: hidden;
+    }
+
+    .preview-header {
+      flex: 0 0 auto;
+      height: 28px;
+      padding: 0 10px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .preview-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .reload-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .reload-btn:active {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    #previewFrame {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: none;
+      background: #ffffff;
+    }
+
+    /* View modes */
+    .workspace[data-view="code"] .preview-pane {
+      display: none;
+    }
+
+    .workspace[data-view="code"] .editor-pane {
+      flex: 1 1 100%;
+    }
+
+    .workspace[data-view="preview"] .editor-pane {
+      display: none;
+    }
+
+    .workspace[data-view="preview"] .preview-pane {
+      flex: 1 1 100%;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 70px;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--surface-3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 40;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Confirm modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.62);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 320px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-text {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .modal-btn {
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-btn.confirm {
+      border-color: transparent;
+      background: var(--danger);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="brand" aria-label="HTML Пісочниця">
+          <span class="brand-dot"></span>
+          <span>&lt;/&gt;</span>
+        </div>
+
+        <div class="segmented" role="tablist" aria-label="Режим перегляду">
+          <button type="button" class="seg-btn active" data-mode="split" role="tab" aria-selected="true">Розділений</button>
+          <button type="button" class="seg-btn" data-mode="code" role="tab" aria-selected="false">Код</button>
+          <button type="button" class="seg-btn" data-mode="preview" role="tab" aria-selected="false">Результат</button>
+        </div>
+
+        <button type="button" class="theme-btn" id="themeToggleBtn" aria-label="Перемкнути тему" title="Світла / Темна тема">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+
+      <div class="service-strip" aria-label="Сервісні дії">
+        <button type="button" class="svc-btn primary" id="btnExample">Приклад</button>
+        <button type="button" class="svc-btn" id="btnTemplate">Шаблон</button>
+        <button type="button" class="svc-btn" id="btnFormat">Формат</button>
+        <button type="button" class="svc-btn" id="btnCopy">Копіювати код</button>
+        <button type="button" class="svc-btn" id="btnDownload">Завантажити .html</button>
+        <button type="button" class="svc-btn danger" id="btnClear">Очистити</button>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace" data-view="split">
+      <section class="editor-pane" aria-label="Редактор HTML">
+        <div class="editor-wrap">
+          <textarea
+            id="codeEditor"
+            autocapitalize="off"
+            autocorrect="off"
+            autocomplete="off"
+            spellcheck="false"
+            inputmode="text"
+            enterkeyhint="enter"
+            placeholder="Введіть HTML-код або скористайтесь панеллю тегів..."
+            aria-label="Поле введення HTML-коду"
+          ></textarea>
+        </div>
+
+        <div class="quick-bar" id="quickBar" aria-label="Панель швидких інструментів">
+          <button type="button" class="q-btn nav" id="btnUndo" tabindex="-1" title="Скасувати" aria-label="Скасувати" disabled>↶</button>
+          <button type="button" class="q-btn nav" id="btnRedo" tabindex="-1" title="Повторити" aria-label="Повторити" disabled>↷</button>
+          <button type="button" class="q-btn nav" data-nav="left" tabindex="-1" title="Курсор ліворуч" aria-label="Курсор ліворуч">←</button>
+          <button type="button" class="q-btn nav" data-nav="right" tabindex="-1" title="Курсор праворуч" aria-label="Курсор праворуч">→</button>
+          <button type="button" class="q-btn nav" data-action="tab" tabindex="-1" title="Відступ (2 пробіли)" aria-label="Tab">Tab</button>
+
+          <span class="q-sep" aria-hidden="true"></span>
+
+          <button type="button" class="q-btn sym" data-sym="<" tabindex="-1">&lt;</button>
+          <button type="button" class="q-btn sym" data-sym=">" tabindex="-1">&gt;</button>
+          <button type="button" class="q-btn sym" data-sym="/" tabindex="-1">/</button>
+          <button type="button" class="q-btn sym" data-sym="=" tabindex="-1">=</button>
+          <button type="button" class="q-btn sym" data-sym='"' tabindex="-1">"</button>
+          <button type="button" class="q-btn sym" data-sym="'" tabindex="-1">'</button>
+          <button type="button" class="q-btn sym" data-sym="." tabindex="-1">.</button>
+          <button type="button" class="q-btn sym" data-sym=":" tabindex="-1">:</button>
+          <button type="button" class="q-btn sym" data-sym=";" tabindex="-1">;</button>
+          <button type="button" class="q-btn sym" data-sym="#" tabindex="-1">#</button>
+          <button type="button" class="q-btn sym" data-sym="!" tabindex="-1">!</button>
+
+          <span class="q-sep" aria-hidden="true"></span>
+
+          <button type="button" class="q-btn tag" data-snippet="doctype" tabindex="-1">&lt;!DOCTYPE html&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="h1" tabindex="-1">&lt;h1&gt;&lt;/h1&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="p" tabindex="-1">&lt;p&gt;&lt;/p&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="strong" tabindex="-1">&lt;strong&gt;&lt;/strong&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="em" tabindex="-1">&lt;em&gt;&lt;/em&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="br" tabindex="-1">&lt;br&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="hr" tabindex="-1">&lt;hr&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="ul" tabindex="-1">&lt;ul&gt;&lt;li&gt;&lt;/li&gt;&lt;/ul&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="ol" tabindex="-1">&lt;ol&gt;&lt;li&gt;&lt;/li&gt;&lt;/ol&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="a" tabindex="-1">&lt;a href=""&gt;&lt;/a&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="img" tabindex="-1">&lt;img src="" alt=""&gt;</button>
+          <button type="button" class="q-btn tag" data-snippet="div" tabindex="-1">&lt;div&gt;&lt;/div&gt;</button>
+        </div>
+      </section>
+
+      <section class="preview-pane" aria-label="Живий перегляд">
+        <div class="preview-header">
+          <span class="preview-status">
+            <span class="live-dot"></span>
+            <span>Результат</span>
+          </span>
+          <button type="button" class="reload-btn" id="btnReloadPreview" aria-label="Оновити перегляд">↻ Оновити</button>
+        </div>
+        <iframe
+          id="previewFrame"
+          title="Живий перегляд HTML"
+          sandbox="allow-scripts allow-forms allow-modals allow-popups"
+        ></iframe>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="clearModal" role="dialog" aria-modal="true" aria-labelledby="clearModalTitle">
+    <div class="modal-card">
+      <h2 class="modal-title" id="clearModalTitle">Очистити редактор?</h2>
+      <p class="modal-text">Увесь поточний код буде видалено з поля введення.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn" id="btnCancelClear">Скасувати</button>
+        <button type="button" class="modal-btn confirm" id="btnConfirmClear">Очистити</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var STORAGE_CODE = 'html_sandbox_code_v1';
+      var STORAGE_THEME = 'html_sandbox_theme_v1';
+      var STORAGE_VIEW = 'html_sandbox_view_v1';
+
+      var TEMPLATE_CODE = [
+        '<!DOCTYPE html>',
+        '<html lang="uk">',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '  <title>Моя сторінка</title>',
+        '</head>',
+        '<body>',
+        '  <h1>Привіт!</h1>',
+        '  <p>Це моя перша сторінка.</p>',
+        '</body>',
+        '</html>'
+      ].join('\n');
+
+      var EXAMPLE_CODE = [
+        '<!DOCTYPE html>',
+        '<html lang="uk">',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '  <title>Приклад HTML</title>',
+        '  <style>',
+        '    body {',
+        '      font-family: sans-serif;',
+        '      padding: 16px;',
+        '      line-height: 1.5;',
+        '      color: #0f172a;',
+        '      background: #f8fafc;',
+        '    }',
+        '    h1 { color: #0284c7; margin-top: 0; }',
+        '    a { color: #0284c7; font-weight: 600; }',
+        '  </style>',
+        '</head>',
+        '<body>',
+        '  <h1>Вебсторінка</h1>',
+        '  <p>Це <strong>живий</strong> приклад <em>HTML-коду</em>.</p>',
+        '  <ul>',
+        '    <li>Заголовки та абзаци</li>',
+        '    <li>Списки і форматування</li>',
+        '    <li>Посилання та зображення</li>',
+        '  </ul>',
+        '  <p><a href="https://developer.mozilla.org">Довідник HTML</a></p>',
+        '</body>',
+        '</html>'
+      ].join('\n');
+
+      var SNIPPETS = {
+        doctype: { before: '<!DOCTYPE html>\n', after: '', cursorInside: false },
+        h1: { before: '<h1>', after: '</h1>', cursorInside: true },
+        p: { before: '<p>', after: '</p>', cursorInside: true },
+        strong: { before: '<strong>', after: '</strong>', cursorInside: true },
+        em: { before: '<em>', after: '</em>', cursorInside: true },
+        br: { before: '<br>', after: '', cursorInside: false },
+        hr: { before: '<hr>', after: '', cursorInside: false },
+        ul: { before: '<ul>\n  <li>', after: '</li>\n</ul>', cursorInside: true },
+        ol: { before: '<ol>\n  <li>', after: '</li>\n</ol>', cursorInside: true },
+        a: { before: '<a href="', after: '"></a>', cursorInside: true, attrMode: true },
+        img: { before: '<img src="', after: '" alt="">', cursorInside: true, attrMode: true },
+        div: { before: '<div>', after: '</div>', cursorInside: true }
+      };
+
+      var editor = document.getElementById('codeEditor');
+      var preview = document.getElementById('previewFrame');
+      var workspace = document.getElementById('workspace');
+      var quickBar = document.getElementById('quickBar');
+      var btnUndo = document.getElementById('btnUndo');
+      var btnRedo = document.getElementById('btnRedo');
+      var themeToggleBtn = document.getElementById('themeToggleBtn');
+      var themeIcon = document.getElementById('themeIcon');
+      var toastEl = document.getElementById('toast');
+      var clearModal = document.getElementById('clearModal');
+
+      var segButtons = Array.prototype.slice.call(document.querySelectorAll('.seg-btn'));
+
+      // History stack
+      var historyStack = [];
+      var historyIndex = -1;
+      var MAX_HISTORY = 150;
+      var typingTimer = null;
+      var previewTimer = null;
+      var toastTimer = null;
+
+      function safeGet(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function safeSet(key, val) {
+        try {
+          window.localStorage.setItem(key, val);
+        } catch (e) {
+          // Ignore storage quota / private mode errors
+        }
+      }
+
+      // Dynamic viewport height for mobile keyboards (iOS & Android)
+      function syncViewportHeight() {
+        var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
+        if (window.scrollY !== 0) {
+          window.scrollTo(0, 0);
+        }
+      }
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncViewportHeight);
+        window.visualViewport.addEventListener('scroll', syncViewportHeight);
+      }
+      window.addEventListener('resize', syncViewportHeight);
+      syncViewportHeight();
+
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove('show');
+        }, 1800);
+      }
+
+      function updatePreview(immediate) {
+        clearTimeout(previewTimer);
+        var render = function () {
+          preview.srcdoc = editor.value;
+        };
+        if (immediate) {
+          render();
+        } else {
+          previewTimer = setTimeout(render, 45);
+        }
+      }
+
+      function saveCode() {
+        safeSet(STORAGE_CODE, editor.value);
+      }
+
+      function updateHistoryButtons() {
+        btnUndo.disabled = historyIndex <= 0;
+        btnRedo.disabled = historyIndex >= historyStack.length - 1;
+      }
+
+      function pushHistory(force) {
+        var snap = {
+          value: editor.value,
+          start: editor.selectionStart || 0,
+          end: editor.selectionEnd || 0
+        };
+        var current = historyStack[historyIndex];
+        if (current && current.value === snap.value) {
+          if (force) {
+            historyStack[historyIndex] = snap;
+          }
+          return;
+        }
+        if (historyIndex < historyStack.length - 1) {
+          historyStack = historyStack.slice(0, historyIndex + 1);
+        }
+        historyStack.push(snap);
+        if (historyStack.length > MAX_HISTORY) {
+          historyStack.shift();
+        }
+        historyIndex = historyStack.length - 1;
+        updateHistoryButtons();
+      }
+
+      function applyHistorySnapshot(snap) {
+        editor.value = snap.value;
+        ensureEditorFocus();
+        editor.setSelectionRange(snap.start, snap.end);
+        saveCode();
+        updatePreview(true);
+        updateHistoryButtons();
+      }
+
+      function undo() {
+        clearTimeout(typingTimer);
+        if (historyIndex > 0) {
+          historyIndex -= 1;
+          applyHistorySnapshot(historyStack[historyIndex]);
+        }
+      }
+
+      function redo() {
+        clearTimeout(typingTimer);
+        if (historyIndex < historyStack.length - 1) {
+          historyIndex += 1;
+          applyHistorySnapshot(historyStack[historyIndex]);
+        }
+      }
+
+      function ensureEditorFocus() {
+        if (document.activeElement !== editor) {
+          try {
+            editor.focus({ preventScroll: true });
+          } catch (e) {
+            editor.focus();
+          }
+        }
+      }
+
+      function replaceSelection(text, newCursorOffsetFromStart) {
+        ensureEditorFocus();
+        pushHistory(true);
+
+        var start = editor.selectionStart || 0;
+        var end = editor.selectionEnd || 0;
+        var value = editor.value;
+
+        editor.value = value.slice(0, start) + text + value.slice(end);
+        var pos = start + newCursorOffsetFromStart;
+        editor.setSelectionRange(pos, pos);
+
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+      }
+
+      function insertSnippet(key) {
+        var spec = SNIPPETS[key];
+        if (!spec) return;
+
+        ensureEditorFocus();
+        pushHistory(true);
+
+        var start = editor.selectionStart || 0;
+        var end = editor.selectionEnd || 0;
+        var value = editor.value;
+        var selected = value.slice(start, end);
+
+        var inserted = '';
+        var cursorPos = start;
+
+        if (spec.attrMode && selected.length > 0 && key === 'a') {
+          inserted = '<a href="">' + selected + '</a>';
+          cursorPos = start + '<a href="'.length;
+        } else if (spec.cursorInside) {
+          inserted = spec.before + selected + spec.after;
+          cursorPos = start + spec.before.length + (selected.length > 0 && !spec.attrMode ? selected.length : 0);
+        } else {
+          inserted = spec.before + spec.after;
+          cursorPos = start + inserted.length;
+        }
+
+        editor.value = value.slice(0, start) + inserted + value.slice(end);
+        editor.setSelectionRange(cursorPos, cursorPos);
+
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+      }
+
+      function moveCursor(delta) {
+        ensureEditorFocus();
+        var start = editor.selectionStart || 0;
+        var end = editor.selectionEnd || 0;
+        var len = editor.value.length;
+        var nextPos;
+
+        if (start !== end) {
+          nextPos = delta < 0 ? start : end;
+        } else {
+          nextPos = Math.max(0, Math.min(len, start + delta));
+        }
+        editor.setSelectionRange(nextPos, nextPos);
+      }
+
+      function insertTab() {
+        ensureEditorFocus();
+        var start = editor.selectionStart || 0;
+        var end = editor.selectionEnd || 0;
+        if (start === end) {
+          replaceSelection('  ', 2);
+          return;
+        }
+        pushHistory(true);
+        var value = editor.value;
+        var lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        var block = value.slice(lineStart, end);
+        var indented = '  ' + block.replace(/\n/g, '\n  ');
+        var added = indented.length - block.length;
+        editor.value = value.slice(0, lineStart) + indented + value.slice(end);
+        editor.setSelectionRange(start + 2, end + added);
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+      }
+
+      // Clean HTML formatter
+      function formatHtml(source) {
+        var VOID_TAGS = {
+          area: 1, base: 1, br: 1, col: 1, embed: 1, hr: 1, img: 1,
+          input: 1, link: 1, meta: 1, param: 1, source: 1, track: 1, wbr: 1
+        };
+        var INLINE_TAGS = {
+          a: 1, abbr: 1, b: 1, bdi: 1, bdo: 1, cite: 1, code: 1, data: 1,
+          del: 1, dfn: 1, em: 1, i: 1, ins: 1, kbd: 1, label: 1, mark: 1,
+          q: 1, s: 1, samp: 1, small: 1, span: 1, strong: 1, sub: 1, sup: 1,
+          time: 1, u: 1, var: 1
+        };
+
+        var tokens = [];
+        var rawRegex = /(<![\s\S]*?>|<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<pre[\s\S]*?<\/pre>|<textarea[\s\S]*?<\/textarea>|<[^>]+>|[^<]+)/gi;
+        var match;
+        while ((match = rawRegex.exec(source)) !== null) {
+          tokens.push(match[0]);
+        }
+
+        var lines = [];
+        var indent = 0;
+
+        function pad(n) {
+          var s = '';
+          for (var i = 0; i < n; i++) s += '  ';
+          return s;
+        }
+
+        for (var i = 0; i < tokens.length; i++) {
+          var tok = tokens[i];
+          var trimmed = tok.trim();
+          if (!trimmed) continue;
+
+          // Comments, doctype
+          if (/^<!/i.test(trimmed)) {
+            lines.push(pad(indent) + trimmed);
+            continue;
+          }
+
+          // <style> / <script> blocks
+          var rawBlockMatch = trimmed.match(/^<(style|script)\b([^>]*)>([\s\S]*?)<\/\1>$/i);
+          if (rawBlockMatch) {
+            var tagName = rawBlockMatch[1].toLowerCase();
+            var attrs = rawBlockMatch[2] || '';
+            var inner = rawBlockMatch[3].trim();
+            if (!inner) {
+              lines.push(pad(indent) + '<' + tagName + attrs + '></' + tagName + '>');
+            } else {
+              lines.push(pad(indent) + '<' + tagName + attrs + '>');
+              var innerLines = inner.split('\n');
+              var minLead = Infinity;
+              for (var j = 0; j < innerLines.length; j++) {
+                if (innerLines[j].trim()) {
+                  var m = innerLines[j].match(/^ */)[0].length;
+                  if (m < minLead) minLead = m;
+                }
+              }
+              if (minLead === Infinity) minLead = 0;
+              for (var k = 0; k < innerLines.length; k++) {
+                var ln = innerLines[k].slice(minLead).replace(/\s+$/, '');
+                if (ln.trim()) {
+                  lines.push(pad(indent + 1) + ln);
+                }
+              }
+              lines.push(pad(indent) + '</' + tagName + '>');
+            }
+            continue;
+          }
+
+          // <pre> / <textarea> preserve verbatim
+          if (/^<(pre|textarea)\b/i.test(trimmed)) {
+            lines.push(pad(indent) + trimmed);
+            continue;
+          }
+
+          // Closing tag
+          var closeMatch = trimmed.match(/^<\/([a-zA-Z0-9-]+)\s*>$/);
+          if (closeMatch) {
+            indent = Math.max(0, indent - 1);
+            lines.push(pad(indent) + '</' + closeMatch[1].toLowerCase() + '>');
+            continue;
+          }
+
+          // Opening tag
+          var openMatch = trimmed.match(/^<([a-zA-Z0-9-]+)([\s\S]*?)(\/?)>$/);
+          if (openMatch) {
+            var name = openMatch[1].toLowerCase();
+            var selfClose = openMatch[3] === '/' || !!VOID_TAGS[name];
+
+            // Compact simple single-line elements like <h1>Title</h1> or <p>Text</p> or <li>Item</li>
+            if (!selfClose && i + 2 < tokens.length) {
+              var nextTok = tokens[i + 1];
+              var afterTok = tokens[i + 2].trim();
+              var nextIsText = nextTok && nextTok.charAt(0) !== '<';
+              var afterMatch = afterTok.match(/^<\/([a-zA-Z0-9-]+)\s*>$/);
+              if (
+                nextIsText &&
+                afterMatch &&
+                afterMatch[1].toLowerCase() === name &&
+                nextTok.indexOf('\n') === -1 &&
+                nextTok.trim().length <= 72
+              ) {
+                lines.push(pad(indent) + trimmed + nextTok.trim() + '</' + name + '>');
+                i += 2;
+                continue;
+              }
+            }
+
+            // Compact inline tag with empty content like <strong></strong>
+            if (!selfClose && i + 1 < tokens.length) {
+              var immediateClose = tokens[i + 1].trim().match(/^<\/([a-zA-Z0-9-]+)\s*>$/);
+              if (immediateClose && immediateClose[1].toLowerCase() === name) {
+                lines.push(pad(indent) + trimmed + '</' + name + '>');
+                i += 1;
+                continue;
+              }
+            }
+
+            // Check if block contains only short inline phrasing (e.g. <p>Це <strong>живий</strong> текст.</p>)
+            if (!selfClose && !INLINE_TAGS[name]) {
+              var inlineChunk = '';
+              var depth = 1;
+              var scan = i + 1;
+              var onlyInline = true;
+              while (scan < tokens.length && depth > 0) {
+                var st = tokens[scan];
+                var strim = st.trim();
+                if (!strim) {
+                  inlineChunk += ' ';
+                  scan++;
+                  continue;
+                }
+                if (strim.charAt(0) !== '<') {
+                  if (st.indexOf('\n') !== -1) {
+                    onlyInline = false;
+                    break;
+                  }
+                  inlineChunk += st.replace(/\s+/g, ' ');
+                } else {
+                  var cM = strim.match(/^<\/([a-zA-Z0-9-]+)\s*>$/);
+                  var oM = strim.match(/^<([a-zA-Z0-9-]+)[^>]*?(\/?)>$/);
+                  if (cM) {
+                    var cName = cM[1].toLowerCase();
+                    if (depth === 1 && cName === name) {
+                      depth = 0;
+                      break;
+                    }
+                    if (!INLINE_TAGS[cName]) {
+                      onlyInline = false;
+                      break;
+                    }
+                    depth--;
+                    inlineChunk += strim;
+                  } else if (oM) {
+                    var oName = oM[1].toLowerCase();
+                    var oVoid = oM[2] === '/' || !!VOID_TAGS[oName];
+                    if (!INLINE_TAGS[oName] && !VOID_TAGS[oName]) {
+                      onlyInline = false;
+                      break;
+                    }
+                    if (!oVoid) depth++;
+                    inlineChunk += strim;
+                  } else {
+                    onlyInline = false;
+                    break;
+                  }
+                }
+                if (inlineChunk.length > 90) {
+                  onlyInline = false;
+                  break;
+                }
+                scan++;
+              }
+              if (onlyInline && depth === 0 && scan < tokens.length) {
+                lines.push(pad(indent) + trimmed + inlineChunk.trim() + '</' + name + '>');
+                i = scan;
+                continue;
+              }
+            }
+
+            lines.push(pad(indent) + trimmed);
+            if (!selfClose) {
+              indent++;
+            }
+            continue;
+          }
+
+          // Plain text
+          var cleanText = trimmed.replace(/\s+/g, ' ');
+          lines.push(pad(indent) + cleanText);
+        }
+
+        return lines.join('\n');
+      }
+
+      // View mode
+      function setViewMode(mode) {
+        workspace.setAttribute('data-view', mode);
+        segButtons.forEach(function (btn) {
+          var active = btn.getAttribute('data-mode') === mode;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        safeSet(STORAGE_VIEW, mode);
+        if (mode !== 'code') {
+          updatePreview(true);
+        }
+      }
+
+      segButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setViewMode(btn.getAttribute('data-mode'));
+        });
+      });
+
+      // Theme
+      function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        safeSet(STORAGE_THEME, theme);
+      }
+
+      themeToggleBtn.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme');
+        setTheme(current === 'dark' ? 'light' : 'dark');
+      });
+
+      // Service buttons
+      document.getElementById('btnExample').addEventListener('click', function () {
+        pushHistory(true);
+        editor.value = EXAMPLE_CODE;
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+        showToast('Завантажено приклад');
+      });
+
+      document.getElementById('btnTemplate').addEventListener('click', function () {
+        pushHistory(true);
+        editor.value = TEMPLATE_CODE;
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+        showToast('Вставлено шаблон');
+      });
+
+      document.getElementById('btnFormat').addEventListener('click', function () {
+        pushHistory(true);
+        var formatted = formatHtml(editor.value);
+        if (formatted !== editor.value) {
+          editor.value = formatted;
+          pushHistory(true);
+          saveCode();
+          updatePreview(true);
+        }
+        showToast('Код відформатовано');
+      });
+
+      document.getElementById('btnCopy').addEventListener('click', function () {
+        var text = editor.value;
+        if (window.AndroidBridge && typeof window.AndroidBridge.copyText === 'function') {
+          window.AndroidBridge.copyText(text);
+          showToast('Скопійовано');
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showToast('Скопійовано');
+          }).catch(function () {
+            fallbackCopy(text);
+          });
+        } else {
+          fallbackCopy(text);
+        }
+      });
+
+      function fallbackCopy(text) {
+        var helper = document.createElement('textarea');
+        helper.value = text;
+        helper.setAttribute('readonly', '');
+        helper.style.position = 'fixed';
+        helper.style.opacity = '0';
+        document.body.appendChild(helper);
+        helper.select();
+        helper.setSelectionRange(0, text.length);
+        try {
+          document.execCommand('copy');
+          showToast('Скопійовано');
+        } catch (e) {
+          showToast('Не вдалося скопіювати');
+        }
+        document.body.removeChild(helper);
+      }
+
+      document.getElementById('btnDownload').addEventListener('click', function () {
+        var code = editor.value;
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveHtmlFile === 'function') {
+          window.AndroidBridge.saveHtmlFile(code);
+          return;
+        }
+        try {
+          var blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+          var url = URL.createObjectURL(blob);
+          var link = document.createElement('a');
+          link.href = url;
+          link.download = 'index.html';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(function () {
+            URL.revokeObjectURL(url);
+          }, 1500);
+          showToast('Файл index.html збережено');
+        } catch (err) {
+          if (navigator.share) {
+            var file = new File([code], 'index.html', { type: 'text/html' });
+            navigator.share({ files: [file], title: 'index.html' }).catch(function () {});
+          } else {
+            showToast('Помилка збереження');
+          }
+        }
+      });
+
+      // Clear confirmation modal
+      document.getElementById('btnClear').addEventListener('click', function () {
+        clearModal.classList.add('open');
+      });
+
+      document.getElementById('btnCancelClear').addEventListener('click', function () {
+        clearModal.classList.remove('open');
+      });
+
+      clearModal.addEventListener('click', function (e) {
+        if (e.target === clearModal) {
+          clearModal.classList.remove('open');
+        }
+      });
+
+      document.getElementById('btnConfirmClear').addEventListener('click', function () {
+        clearModal.classList.remove('open');
+        pushHistory(true);
+        editor.value = '';
+        pushHistory(true);
+        saveCode();
+        updatePreview(true);
+        showToast('Редактор очищено');
+      });
+
+      document.getElementById('btnReloadPreview').addEventListener('click', function () {
+        preview.srcdoc = '';
+        setTimeout(function () {
+          preview.srcdoc = editor.value;
+        }, 15);
+      });
+
+      // Quick toolbar action execution + strict focus preservation
+      function runQuickAction(btn) {
+        if (!btn || btn.disabled) return;
+        if (btn.id === 'btnUndo') {
+          undo();
+        } else if (btn.id === 'btnRedo') {
+          redo();
+        } else if (btn.hasAttribute('data-nav')) {
+          moveCursor(btn.getAttribute('data-nav') === 'left' ? -1 : 1);
+        } else if (btn.getAttribute('data-action') === 'tab') {
+          insertTab();
+        } else if (btn.hasAttribute('data-sym')) {
+          replaceSelection(btn.getAttribute('data-sym'), 1);
+        } else if (btn.hasAttribute('data-snippet')) {
+          insertSnippet(btn.getAttribute('data-snippet'));
+        }
+      }
+
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchMoved = false;
+      var lastTouchHandledAt = 0;
+
+      quickBar.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'touch') {
+          e.preventDefault();
+        }
+      });
+
+      quickBar.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+      });
+
+      quickBar.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          touchMoved = false;
+        }
+      }, { passive: true });
+
+      quickBar.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 1) {
+          var dx = Math.abs(e.touches[0].clientX - touchStartX);
+          var dy = Math.abs(e.touches[0].clientY - touchStartY);
+          if (dx > 8 || dy > 8) {
+            touchMoved = true;
+          }
+        }
+      }, { passive: true });
+
+      quickBar.addEventListener('touchend', function (e) {
+        var btn = e.target.closest('.q-btn');
+        if (!btn || touchMoved) return;
+        e.preventDefault();
+        lastTouchHandledAt = Date.now();
+        runQuickAction(btn);
+      });
+
+      quickBar.addEventListener('click', function (e) {
+        if (Date.now() - lastTouchHandledAt < 450) {
+          e.preventDefault();
+          return;
+        }
+        var btn = e.target.closest('.q-btn');
+        if (!btn) return;
+        e.preventDefault();
+        runQuickAction(btn);
+      });
+
+      // Editor events
+      editor.addEventListener('input', function (e) {
+        saveCode();
+        updatePreview(false);
+
+        var data = e.data || '';
+        var isBoundary =
+          e.inputType === 'insertFromPaste' ||
+          e.inputType === 'deleteByCut' ||
+          e.inputType === 'insertLineBreak' ||
+          /[\s<>/"'=;]/.test(data);
+
+        clearTimeout(typingTimer);
+        if (isBoundary) {
+          pushHistory(false);
+        } else {
+          typingTimer = setTimeout(function () {
+            pushHistory(false);
+          }, 400);
+        }
+      });
+
+      editor.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          insertTab();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+          var k = e.key.toLowerCase();
+          if (k === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            undo();
+          } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+            e.preventDefault();
+            redo();
+          }
+        }
+      });
+
+      // Expose toast for Android bridge callback
+      window.__showSandboxToast = showToast;
+
+      // Initialize saved state
+      var savedTheme = safeGet(STORAGE_THEME);
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme);
+      } else {
+        setTheme('dark');
+      }
+
+      var savedView = safeGet(STORAGE_VIEW);
+      if (savedView === 'split' || savedView === 'code' || savedView === 'preview') {
+        setViewMode(savedView);
+      } else {
+        setViewMode('split');
+      }
+
+      var savedCode = safeGet(STORAGE_CODE);
+      editor.value = savedCode !== null ? savedCode : TEMPLATE_CODE;
+      pushHistory(true);
+      updatePreview(true);
+    })();
+  </script>
+</body>
+</html>
